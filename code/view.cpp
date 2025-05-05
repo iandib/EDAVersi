@@ -5,6 +5,11 @@
  * @copyright Copyright (c) 2023-2024
  */
 
+// Para que floor no tire error
+//? Son necesarias las dos?
+#include <cmath>
+#include <math.h>
+
 #include <string>
 
 #include "raylib.h"
