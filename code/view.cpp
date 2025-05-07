@@ -29,6 +29,7 @@
 
 #define PIECE_CENTER (SQUARE_SIZE / 2)
 #define PIECE_RADIUS (SQUARE_SIZE * 80 / 100 / 2)
+#define VALID_MOVE_RADIUS (SQUARE_SIZE * 30 / 100 / 2)
 
 #define BOARD_X 40
 #define BOARD_Y 40
@@ -184,6 +185,12 @@ void drawView(GameModel &model)
         OUTERBORDER_SIZE,
         BLACK);
 
+    // Get valid moves for current player (to show hints)
+    Moves validMoves;
+    if (!model.gameOver && model.currentPlayer == model.humanPlayer) {
+        getValidMoves(model, validMoves);
+    }
+
     for (int y = 0; y < BOARD_SIZE; y++)
         for (int x = 0; x < BOARD_SIZE; x++)
         {
@@ -209,6 +216,20 @@ void drawView(GameModel &model)
                            (int)position.y + PIECE_CENTER,
                            PIECE_RADIUS,
                            (piece == PIECE_WHITE) ? WHITE : BLACK);
+            
+            // Draw valid move indicator if this is a valid move
+            if (!model.gameOver && model.currentPlayer == model.humanPlayer) {
+                for (auto move : validMoves) {
+                    if (move.x == x && move.y == y) {
+                        // Draw a smaller gray circle to indicate valid move
+                        DrawCircle((int)position.x + PIECE_CENTER,
+                                  (int)position.y + PIECE_CENTER,
+                                  VALID_MOVE_RADIUS,
+                                  GRAY);
+                        break;
+                    }
+                }
+            }
         }
 
     drawScore("Black score: ",
