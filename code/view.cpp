@@ -6,9 +6,7 @@
  */
 
 // Para que floor no tire error
-//? Son necesarias las dos?
 #include <cmath>
-#include <math.h>
 
 #include <string>
 

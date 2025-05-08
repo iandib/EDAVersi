@@ -1,17 +1,31 @@
-/**
- * @brief Implements the Reversi game model
- * @author Marc S. Ressl
- *
- * @copyright Copyright (c) 2023-2024
- */
+/* *****************************************************************
+    * FILE INFORMATION *
+   ***************************************************************** */
+   
+/// @brief Implements the Reversi game model
+/// @author Marc S. Ressl, Ian A. Dib, Luciano S. Cordero
+/// @copyright Copyright (c) 2023-2024
+
+
+/* *****************************************************************
+    * FILE CONFIGURATION *
+   ***************************************************************** */
+
+//* NECESSARY LIBRARIES & HEADERS
 
 #include "raylib.h"
-
 #include "model.h"
+#include <string.h> // For memset function
 
-// Para que memset no tire error
-#include <string.h>
 
+/* *****************************************************************
+    * MODEL INITIALIZATION *
+   ***************************************************************** */
+
+//* SETUP FUNCTIONS
+
+/// @brief Initializes the game model
+/// @param model The game model to initialize
 void initModel(GameModel &model)
 {
     model.gameOver = true;
@@ -21,9 +35,13 @@ void initModel(GameModel &model)
 
     memset(model.board, PIECE_EMPTY, sizeof(model.board));
     
-    // No inicializamos lastMove para que no aparezca el string hasta que no se juegue una ficha
+    /* By not initializing lastHumanMove and lastAIMove, the string 
+    doesn't appear until a piece is played and looks better */
 }
 
+
+/// @brief Starts a new game
+/// @param model The game model to start
 void startModel(GameModel &model)
 {
     model.gameOver = false;
@@ -41,11 +59,26 @@ void startModel(GameModel &model)
     model.board[BOARD_SIZE / 2][BOARD_SIZE / 2 - 1] = PIECE_BLACK;
 }
 
+
+/* *****************************************************************
+    * MODEL ACCESSORS *
+   ***************************************************************** */
+
+//* GAME STATE ACCESSORS
+
+/// @brief Gets the current player
+/// @param model The game model
+/// @return The current player
 Player getCurrentPlayer(GameModel &model)
 {
     return model.currentPlayer;
 }
 
+
+/// @brief Gets the score for a player
+/// @param model The game model
+/// @param player The player to get the score for
+/// @return The score
 int getScore(GameModel &model, Player player)
 {
     int score = 0;
@@ -63,6 +96,11 @@ int getScore(GameModel &model, Player player)
     return score;
 }
 
+
+/// @brief Gets the timer for a player
+/// @param model The game model
+/// @param player The player to get the time for
+/// @return The elapsed time in seconds
 double getTimer(GameModel &model, Player player)
 {
     double turnTime = 0;
@@ -73,16 +111,32 @@ double getTimer(GameModel &model, Player player)
     return model.playerTime[player] + turnTime;
 }
 
+
+//* BOARD STATE ACCESSORS
+
+/// @brief Gets the piece at a specific board position
+/// @param model The game model
+/// @param square The board coordinates
+/// @return The piece at that position
 Piece getBoardPiece(GameModel &model, Square square)
 {
     return model.board[square.y][square.x];
 }
 
+
+/// @brief Sets a piece at a specific board position
+/// @param model The game model
+/// @param square The board coordinates
+/// @param piece The piece to set
 void setBoardPiece(GameModel &model, Square square, Piece piece)
 {
     model.board[square.y][square.x] = piece;
 }
 
+
+/// @brief Checks if a square is within the board boundaries
+/// @param square The square to check
+/// @return True if the square is valid
 bool isSquareValid(Square square)
 {
     return (square.x >= 0) &&
@@ -91,16 +145,20 @@ bool isSquareValid(Square square)
         (square.y < BOARD_SIZE);
 }
 
-/**
- * @brief Checks if a move in a certain direction would flip any opponent pieces
- * 
- * @param model The game model
- * @param move Starting square for the check
- * @param dx X-direction delta (-1, 0, or 1)
- * @param dy Y-direction delta (-1, 0, or 1)
- * @param flippedPieces Vector to store squares that should be flipped
- * @return True if pieces would be flipped in this direction
- */
+
+/* *****************************************************************
+    * GAME LOGIC *
+   ***************************************************************** */
+
+//* MOVE VALIDATION
+
+/// @brief Checks if a move in a certain direction would flip any opponent pieces
+/// @param model The game model
+/// @param move Starting square for the check
+/// @param dx X-direction delta (-1, 0, or 1)
+/// @param dy Y-direction delta (-1, 0, or 1)
+/// @param flippedPieces Vector to store squares that should be flipped
+/// @return True if pieces would be flipped in this direction
 bool checkDirection(GameModel &model, Square move, int dx, int dy, std::vector<Square> &flippedPieces)
 {
     // Get the current player's piece color and opponent's piece color
@@ -155,6 +213,10 @@ bool checkDirection(GameModel &model, Square move, int dx, int dy, std::vector<S
     return false;
 }
 
+
+/// @brief Gets all valid moves for the current player
+/// @param model The game model
+/// @param validMoves Vector to store the valid moves
 void getValidMoves(GameModel &model, Moves &validMoves)
 {
     // Clear any existing moves
@@ -200,6 +262,13 @@ void getValidMoves(GameModel &model, Moves &validMoves)
     }
 }
 
+
+//* MOVE EXECUTION
+
+/// @brief Plays a move at the specified position
+/// @param model The game model
+/// @param move The position to play at
+/// @return True if the move was valid and executed
 bool playMove(GameModel &model, Square move)
 {
     // Set game piece

@@ -1,9 +1,17 @@
-/**
- * @brief Implements the Reversi game AI
- * @author Marc S. Ressl
- *
- * @copyright Copyright (c) 2023-2024
- */
+/* *****************************************************************
+    * FILE INFORMATION *
+   ***************************************************************** */
+   
+/// @brief Implements the Reversi game AI using minimax algorithm
+/// @author Marc S. Ressl, Ian A. Dib, Luciano S. Cordero
+/// @copyright Copyright (c) 2023-2024
+
+
+/* *****************************************************************
+    * FILE CONFIGURATION *
+   ***************************************************************** */
+
+//* NECESSARY LIBRARIES & HEADERS
 
 #include <cstdlib>
 #include <limits>
@@ -12,19 +20,35 @@
 #include "ai.h"
 #include "controller.h"
 
-// Configuración del algoritmo minimax
-const int MAX_DEPTH = 5;          // Profundidad máxima para podar
-const int MAX_NODES = 10000;      // Máximo número de nodos a evaluar
-int nodesEvaluated = 0;           // Contador de nodos evaluados
 
-// Valores para la función de evaluación
-const int CORNER_VALUE = 25;      // Valor de una esquina
-const int EDGE_VALUE = 5;         // Valor de una casilla en el borde
-const int MOBILITY_WEIGHT = 2;    // Peso de la movilidad (número de movimientos posibles)
-const int PIECE_VALUE = 1;        // Valor de una ficha normal
+//* CONSTANTS
 
-unsigned int FlippedPiecesInDirection(GameModel& model, Square move, int dx, int dy) { //Cuenta cuantas fichas se pueden voltear en cada direccion con un movimiento
+// Minimax algorithm configuration
+const int MAX_DEPTH = 5;          // Maximum depth for pruning
+const int MAX_NODES = 10000;      // Maximum number of nodes to evaluate
+int nodesEvaluated = 0;           // Counter for evaluated nodes
 
+// Evaluation function parameters
+const int CORNER_VALUE = 25;      // Value of a corner square
+const int EDGE_VALUE = 5;         // Value of an edge square
+const int MOBILITY_WEIGHT = 2;    // Weight for mobility (number of possible moves)
+const int PIECE_VALUE = 1;        // Value of a regular piece
+
+
+/* *****************************************************************
+    * HELPER MODULES *
+   ***************************************************************** */
+
+//* POSITION EVALUATION
+
+/// @brief Counts how many pieces can be flipped in each direction with a move
+/// @param model The game model
+/// @param move The square where the piece would be placed
+/// @param dx X direction (-1, 0, 1)
+/// @param dy Y direction (-1, 0, 1)
+/// @return Number of pieces that would be flipped in this direction
+unsigned int FlippedPiecesInDirection(GameModel& model, Square move, int dx, int dy)
+{
     int flipped = 0;
 
     Piece PlayerPiece = (getCurrentPlayer(model) == PLAYER_WHITE) ? PIECE_WHITE : PIECE_BLACK;
@@ -34,45 +58,51 @@ unsigned int FlippedPiecesInDirection(GameModel& model, Square move, int dx, int
     int y = move.y + dy;
     Square checkSquare = { x, y };
 
-    // La primera casilla en esta dirección debe tener una ficha del oponente
+    // The first square in this direction must contain an opponent piece
     if (!isSquareValid(checkSquare) || getBoardPiece(model, checkSquare) != AiPiece)
         return 0;
 
     flipped++;
 
-    // Continuar moviéndose en esta dirección
+    // Continue moving in this direction
     x += dx;
     y += dy;
     checkSquare = { x, y };
 
-    // Continuar hasta que se encuentre una casilla inválida o vacía
-    while (isSquareValid(checkSquare)) {
+    // Continue until an invalid or empty square is found
+    while (isSquareValid(checkSquare))
+    {
         Piece piece = getBoardPiece(model, checkSquare);
 
         if (piece == PIECE_EMPTY)
-            return 0; // Casilla vacía, no se voltean fichas
+            return 0; // Empty square, no pieces flipped
 
         if (piece == PlayerPiece)
-            return flipped; // Se encontró una ficha propia, se devuelven las volteadas
+            return flipped; // Found own piece, return count of flipped pieces
 
-        // Otra ficha del oponente, incrementar el contador
+        // Another opponent piece, increment counter
         flipped++;
 
-        // Mover a la siguiente casilla en esta dirección
+        // Move to next square in this direction
         x += dx;
         y += dy;
         checkSquare = { x, y };
     }
 
-    // Si se llegó aquí, se salió del tablero sin encontrar una ficha propia
+    // If we reached here, we went off the board without finding our own piece
     return 0;
 }
 
-int countTotalFlippedPieces(GameModel& model, Square move) // Cuenta cuantas fichas se pueden voltear con un movimiento
+
+/// @brief Counts total number of pieces that would be flipped with a move
+/// @param model The game model
+/// @param move The square where the piece would be placed
+/// @return Total number of pieces that would be flipped
+int countTotalFlippedPieces(GameModel& model, Square move)
 {
     int totalFlipped = 0;
 
-    // Recorre todas las direcciones posibles
+    // Check all possible directions
     for (int dy = -1; dy <= 1; dy++)
     {
         for (int dx = -1; dx <= 1; dx++)
@@ -87,93 +117,105 @@ int countTotalFlippedPieces(GameModel& model, Square move) // Cuenta cuantas fic
     return totalFlipped;
 }
 
-/**
- * @brief Verifica si una posición es una esquina
- * @param x Coordenada X
- * @param y Coordenada Y
- * @return true si es una esquina, false en caso contrario
- */
-bool isCorner(int x, int y) {
+
+/// @brief Checks if a position is a corner
+/// @param x X coordinate
+/// @param y Y coordinate
+/// @return true if it's a corner, false otherwise
+bool isCorner(int x, int y)
+{
     return (x == 0 && y == 0) ||
         (x == 0 && y == BOARD_SIZE - 1) ||
         (x == BOARD_SIZE - 1 && y == 0) ||
         (x == BOARD_SIZE - 1 && y == BOARD_SIZE - 1);
 }
 
-/**
- * @brief Verifica si una posición está en el borde
- * @param x Coordenada X
- * @param y Coordenada Y
- * @return true si está en el borde, false en caso contrario
- */
-bool isEdge(int x, int y) {
+
+/// @brief Checks if a position is on the edge
+/// @param x X coordinate
+/// @param y Y coordinate
+/// @return true if it's on the edge, false otherwise
+bool isEdge(int x, int y)
+{
     return x == 0 || y == 0 || x == BOARD_SIZE - 1 || y == BOARD_SIZE - 1;
 }
 
-/**
- * @brief Función de evaluación para el tablero
- * @param model Modelo del juego
- * @param depth Profundidad actual en el árbol de búsqueda
- * @return Valor del tablero desde la perspectiva del jugador actual
- */
-int evaluateBoard(GameModel& model, int depth) {
+
+/* *****************************************************************
+    * MINIMAX ALGORITHM *
+   ***************************************************************** */
+
+//* EVALUATION FUNCTION
+
+/// @brief Evaluation function for the board state
+/// @param model Game model
+/// @param depth Current depth in the search tree
+/// @return Board value from the current player's perspective
+int evaluateBoard(GameModel& model, int depth)
+{
     nodesEvaluated++;
     
-    // Obtener el jugador actual y el oponente
+    // Get current player and opponent
     Player currentPlayer = getCurrentPlayer(model);
     Player opponent = (currentPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
     
-    // Si se alcanzó el límite de nodos, detener la evaluación
-    if (nodesEvaluated >= MAX_NODES) {
+    // If node limit reached, stop evaluation
+    if (nodesEvaluated >= MAX_NODES)
+    {
         return 0;
     }
     
-    // Contar fichas para cada jugador
+    // Count pieces for each player
     int currentPlayerScore = getScore(model, currentPlayer);
     int opponentScore = getScore(model, opponent);
     
-    // Si es fin de juego, retornar un valor alto o bajo
-    if (model.gameOver) {
+    // If game is over, return a high or low value
+    if (model.gameOver)
+    {
         if (currentPlayerScore > opponentScore)
-            return 10000 - depth; // Victoria: valor alto, favoreciendo victorias rápidas
+            return 10000 - depth; // Victory: high value, favoring quick wins
         else if (currentPlayerScore < opponentScore)
-            return -10000 + depth; // Derrota: valor bajo, favoreciendo derrotas lentas
+            return -10000 + depth; // Defeat: low value, favoring slow losses
         else
-            return 0; // Empate
+            return 0; // Draw
     }
     
-    // Evaluar movilidad (cantidad de movimientos posibles)
+    // Evaluate mobility (number of possible moves)
     Moves currentPlayerMoves;
     getValidMoves(model, currentPlayerMoves);
     int mobility = currentPlayerMoves.size() * MOBILITY_WEIGHT;
     
-    // Cambiar al oponente para evaluar su movilidad
+    // Switch to opponent to evaluate their mobility
     GameModel tempModel = model;
     tempModel.currentPlayer = opponent;
     Moves opponentMoves;
     getValidMoves(tempModel, opponentMoves);
     int opponentMobility = opponentMoves.size() * MOBILITY_WEIGHT;
     
-    // Evaluar posesión de esquinas y bordes
+    // Evaluate possession of corners and edges
     int cornerValue = 0;
     int edgeValue = 0;
     
-    for (int y = 0; y < BOARD_SIZE; y++) {
-        for (int x = 0; x < BOARD_SIZE; x++) {
+    for (int y = 0; y < BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
             Square square = {x, y};
             Piece piece = getBoardPiece(model, square);
             
             if (piece == PIECE_EMPTY)
                 continue;
                 
-            if (isCorner(x, y)) {
+            if (isCorner(x, y))
+            {
                 if ((piece == PIECE_WHITE && currentPlayer == PLAYER_WHITE) ||
                     (piece == PIECE_BLACK && currentPlayer == PLAYER_BLACK))
                     cornerValue += CORNER_VALUE;
                 else
                     cornerValue -= CORNER_VALUE;
             }
-            else if (isEdge(x, y)) {
+            else if (isEdge(x, y))
+            {
                 if ((piece == PIECE_WHITE && currentPlayer == PLAYER_WHITE) ||
                     (piece == PIECE_BLACK && currentPlayer == PLAYER_BLACK))
                     edgeValue += EDGE_VALUE;
@@ -183,83 +225,94 @@ int evaluateBoard(GameModel& model, int depth) {
         }
     }
     
-    // Diferencia ponderada de fichas
+    // Weighted piece difference
     int pieceDiff = (currentPlayerScore - opponentScore) * PIECE_VALUE;
     
-    // Valor total combinando todos los factores
+    // Total value combining all factors
     return pieceDiff + cornerValue + edgeValue + (mobility - opponentMobility);
 }
 
-/**
- * @brief Algoritmo minimax con poda por profundidad y nodos
- * @param model Modelo del juego
- * @param depth Profundidad actual
- * @param alpha Valor alpha para poda alpha-beta (bonus)
- * @param beta Valor beta para poda alpha-beta (bonus)
- * @param maximizingPlayer Si es el jugador que maximiza
- * @return Valor de la mejor jugada
- */
-int minimax(GameModel& model, int depth, int alpha, int beta, bool maximizingPlayer) {
-    // Condiciones de terminación
-    if (depth == 0 || model.gameOver || nodesEvaluated >= MAX_NODES) {
+
+//* MINIMAX SEARCH ALGORITHM
+
+/// @brief Minimax algorithm with depth pruning and node limitation
+/// @param model Game model
+/// @param depth Current depth
+/// @param alpha Alpha value for alpha-beta pruning (bonus)
+/// @param beta Beta value for alpha-beta pruning (bonus)
+/// @param maximizingPlayer Whether current player is maximizing
+/// @return Value of the best move
+int minimax(GameModel& model, int depth, int alpha, int beta, bool maximizingPlayer)
+{
+    // Termination conditions
+    if (depth == 0 || model.gameOver || nodesEvaluated >= MAX_NODES)
+    {
         return evaluateBoard(model, depth);
     }
     
     Moves validMoves;
     getValidMoves(model, validMoves);
     
-    // Si no hay movimientos válidos, pasar turno
-    if (validMoves.size() == 0) {
-        // Cambiar de jugador
+    // If no valid moves, pass turn
+    if (validMoves.size() == 0)
+    {
+        // Switch player
         GameModel tempModel = model;
         tempModel.currentPlayer = (tempModel.currentPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
         
-        // Verificar si el otro jugador puede mover
+        // Check if other player can move
         Moves opponentMoves;
         getValidMoves(tempModel, opponentMoves);
         
-        // Si tampoco puede mover, juego terminado
-        if (opponentMoves.size() == 0) {
+        // If they also can't move, game over
+        if (opponentMoves.size() == 0)
+        {
             tempModel.gameOver = true;
             return evaluateBoard(tempModel, depth);
         }
         
-        // Continuar con el otro jugador
+        // Continue with other player
         return minimax(tempModel, depth - 1, alpha, beta, !maximizingPlayer);
     }
     
-    if (maximizingPlayer) {
+    if (maximizingPlayer)
+    {
         int maxEval = std::numeric_limits<int>::min();
         
-        for (const Square& move : validMoves) {
-            // Hacer copia del modelo y jugar el movimiento
+        for (const Square& move : validMoves)
+        {
+            // Make a copy of the model and play the move
             GameModel tempModel = model;
             playMove(tempModel, move);
             
-            // Evaluar recursivamente
+            // Recursive evaluation
             int eval = minimax(tempModel, depth - 1, alpha, beta, false);
             maxEval = std::max(maxEval, eval);
             
-            // Poda alpha-beta (bonus)
+            // Alpha-beta pruning
             alpha = std::max(alpha, eval);
             if (beta <= alpha)
                 break;
         }
         
         return maxEval;
-    } else {
+    }
+
+    else
+    {
         int minEval = std::numeric_limits<int>::max();
         
-        for (const Square& move : validMoves) {
-            // Hacer copia del modelo y jugar el movimiento
+        for (const Square& move : validMoves)
+        {
+            // Make a copy of the model and play the move
             GameModel tempModel = model;
             playMove(tempModel, move);
             
-            // Evaluar recursivamente
+            // Recursive evaluation
             int eval = minimax(tempModel, depth - 1, alpha, beta, true);
             minEval = std::min(minEval, eval);
             
-            // Poda alpha-beta (bonus)
+            // Alpha-beta pruning
             beta = std::min(beta, eval);
             if (beta <= alpha)
                 break;
@@ -269,9 +322,17 @@ int minimax(GameModel& model, int depth, int alpha, int beta, bool maximizingPla
     }
 }
 
+
+/* *****************************************************************
+    * AI EVALUATION *
+   ***************************************************************** */
+
+/// @brief Gets the best move for the current player using minimax algorithm
+/// @param model Game model
+/// @return The best square to play
 Square getBestMove(GameModel& model)
 {
-    // Reiniciar contador de nodos
+    // Reset node counter
     nodesEvaluated = 0;
     
     Moves validMoves;
@@ -280,7 +341,7 @@ Square getBestMove(GameModel& model)
     if (validMoves.size() == 0)
         return GAME_INVALID_SQUARE;
     
-    // 1. Primera prioridad: jugar en las esquinas si es posible (mantiene la estrategia original)
+    // First priority: play in corners if possible
     for (const Square& move : validMoves)
     {
         if (isCorner(move.x, move.y))
@@ -289,20 +350,20 @@ Square getBestMove(GameModel& model)
         }
     }
     
-    // 2. Usar el algoritmo minimax para evaluar el mejor movimiento
+    // Use minimax algorithm to evaluate the best move
     Square bestMove = validMoves[0];
     int bestValue = std::numeric_limits<int>::min();
     
     for (const Square& move : validMoves)
     {
-        // Hacer copia del modelo y jugar el movimiento
+        // Make a copy of the model and play the move
         GameModel tempModel = model;
         playMove(tempModel, move);
         
-        // Evaluar el movimiento con minimax
+        // Evaluate the move with minimax
         int moveValue = minimax(tempModel, MAX_DEPTH - 1, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), false);
         
-        // Actualizar el mejor movimiento si es necesario
+        // Update best move if necessary
         if (moveValue > bestValue)
         {
             bestValue = moveValue;
@@ -310,30 +371,30 @@ Square getBestMove(GameModel& model)
         }
     }
     
-    // 3. Si el mejor movimiento por minimax no es una esquina, considerar las otras prioridades (mantiene la estrategia original)
+    // If best move by minimax is not a corner, consider other priorities
     if (!isCorner(bestMove.x, bestMove.y))
     {
-        // Segunda prioridad: bloquear al oponente para que no pueda jugar en las esquinas
+        // Second priority: block opponent from playing in corners
         GameModel simulatedModel = model;
         Player currentPlayer = getCurrentPlayer(model);
         Player opponentPlayer = (currentPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
         
-        // Lista para guardar los movimientos que bloquean el acceso a las esquinas
+        // List to store moves that block access to corners
         Moves blockingMoves;
         
         for (const Square& move : validMoves)
         {
-            // Simular este movimiento
+            // Simulate this move
             GameModel tempModel = simulatedModel;
             bool moveSuccess = playMove(tempModel, move);
             
             if (!moveSuccess)
                 continue;
             
-            // Verificar si después de este movimiento el oponente puede alcanzar alguna esquina
+            // Check if after this move the opponent can reach any corner
             bool opponentCanReachCorner = false;
             
-            // Asegurarse de que el jugador actual sea el oponente después del movimiento
+            // Ensure current player is the opponent after the move
             if (getCurrentPlayer(tempModel) == opponentPlayer)
             {
                 Moves opponentMoves;
@@ -348,7 +409,7 @@ Square getBestMove(GameModel& model)
                     }
                 }
                 
-                // Si este movimiento previene que el oponente alcance una esquina
+                // If this move prevents opponent from reaching a corner
                 if (!opponentCanReachCorner)
                 {
                     blockingMoves.push_back(move);
@@ -356,7 +417,7 @@ Square getBestMove(GameModel& model)
             }
         }
         
-        // Si se encontraron movimientos que bloquean el acceso a las esquinas, elegir el que voltee más fichas
+        // If corner-blocking moves found, choose the one that flips the most pieces
         if (!blockingMoves.empty())
         {
             Square bestBlockingMove = blockingMoves[0];
