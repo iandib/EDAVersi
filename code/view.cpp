@@ -260,13 +260,13 @@ void drawView(GameModel &model)
               getTimer(model, PLAYER_BLACK));
     
     // Draw last move info above score based on human player color
-    if(model.humanPlayer == PLAYER_BLACK)
+    if((model.humanPlayer == PLAYER_BLACK) && !model.gameOver)
     {
         drawLastMove({INFO_CENTERED_X, INFO_WHITE_LASTMOVE_Y}, model.lastHumanMove);
         drawLastMove({INFO_CENTERED_X, INFO_BLACK_LASTMOVE_Y}, model.lastAIMove);
     }
 
-    else
+    else if((model.humanPlayer == PLAYER_WHITE) && !model.gameOver)
     {
         drawLastMove({INFO_CENTERED_X, INFO_BLACK_LASTMOVE_Y}, model.lastHumanMove);
         drawLastMove({INFO_CENTERED_X, INFO_WHITE_LASTMOVE_Y}, model.lastAIMove);
