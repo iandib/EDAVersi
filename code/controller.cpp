@@ -6,12 +6,26 @@
  */
 
 #include <algorithm>
+#include <string>
 
 #include "raylib.h"
 
 #include "ai.h"
 #include "view.h"
 #include "controller.h"
+
+/**
+ * @brief Convierte coordenadas de tablero a notación de ajedrez
+ * 
+ * @param square Coordenadas del tablero
+ * @return Cadena en formato "A1", "H8", etc.
+ */
+std::string squareToChessNotation(Square square) {
+    std::string notation;
+    notation += static_cast<char>('A' + square.x);  // 'A' + 0 = 'A', 'A' + 7 = 'H'
+    notation += std::to_string(square.y + 1);       // 0+1 = 1, 7+1 = 8
+    return notation;
+}
 
 bool updateView(GameModel &model)
 {
@@ -52,8 +66,12 @@ bool updateView(GameModel &model)
                 for (auto move : validMoves)
                 {
                     if ((square.x == move.x) &&
-                        (square.y == move.y))
-                        playMove(model, square);
+                        (square.y == move.y)) {
+                        if (playMove(model, square)) {
+                            // Store the move in the model instead of printing to console
+                            model.lastHumanMove = squareToChessNotation(square);
+                        }
+                    }
                 }
             }
         }
@@ -63,11 +81,14 @@ bool updateView(GameModel &model)
         // AI player
         Square square = getBestMove(model);
 
-        playMove(model, square);
+        if (playMove(model, square)) {
+            // Store the move in the model instead of printing to console
+            model.lastAIMove = squareToChessNotation(square);
+        }
     }
 
     if ((IsKeyDown(KEY_LEFT_ALT) ||
-         IsKeyDown(KEY_RIGHT_ALT)) &&
+        IsKeyDown(KEY_RIGHT_ALT)) &&
         IsKeyPressed(KEY_ENTER))
         ToggleFullscreen();
 

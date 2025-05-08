@@ -51,11 +51,11 @@
 
 #define INFO_WHITE_SCORE_Y (WINDOW_HEIGHT * 1 / 4 - SUBTITLE_FONT_SIZE / 2)
 #define INFO_WHITE_TIME_Y (WINDOW_HEIGHT * 1 / 4 + SUBTITLE_FONT_SIZE / 2)
-#define INFO_WHITE_LASTMOVE_Y (INFO_WHITE_SCORE_Y - 40)
+#define INFO_WHITE_LASTMOVE_Y (WINDOW_HEIGHT * 1 / 4 - SUBTITLE_FONT_SIZE - 30)
 
 #define INFO_BLACK_SCORE_Y (WINDOW_HEIGHT * 3 / 4 - SUBTITLE_FONT_SIZE / 2)
 #define INFO_BLACK_TIME_Y (WINDOW_HEIGHT * 3 / 4 + SUBTITLE_FONT_SIZE / 2)
-#define INFO_BLACK_LASTMOVE_Y (INFO_BLACK_TIME_Y + 40)
+#define INFO_BLACK_LASTMOVE_Y (WINDOW_HEIGHT * 3 / 4 - SUBTITLE_FONT_SIZE - 30)
 
 #define INFO_BUTTON_WIDTH 280
 #define INFO_BUTTON_HEIGHT 64
@@ -259,21 +259,19 @@ void drawView(GameModel &model)
                INFO_WHITE_TIME_Y},
               getTimer(model, PLAYER_BLACK));
     
-    // Draw last move info above score based on human player color
-    if(model.humanPlayer == PLAYER_BLACK)
-    {
+    // Draw last move info above score
+    // Display the appropriate last move based on human player color
+    if(model.humanPlayer == PLAYER_BLACK) {
         drawLastMove({INFO_CENTERED_X, INFO_WHITE_LASTMOVE_Y}, model.lastHumanMove);
-        drawLastMove({INFO_CENTERED_X, INFO_BLACK_LASTMOVE_Y}, model.lastAIMove);
-    }
-
-    else
-    {
-        drawLastMove({INFO_CENTERED_X, INFO_BLACK_LASTMOVE_Y}, model.lastHumanMove);
+    } else {
         drawLastMove({INFO_CENTERED_X, INFO_WHITE_LASTMOVE_Y}, model.lastAIMove);
     }
 
     // Draw game title
-    drawCenteredText({INFO_CENTERED_X, INFO_TITLE_Y}, TITLE_FONT_SIZE, GAME_NAME);
+    drawCenteredText({INFO_CENTERED_X,
+                      INFO_TITLE_Y},
+                     TITLE_FONT_SIZE,
+                     GAME_NAME);
     
     // Draw White player info
     drawScore("White score: ",
@@ -284,6 +282,14 @@ void drawView(GameModel &model)
                INFO_BLACK_TIME_Y},
               getTimer(model, PLAYER_WHITE));
     
+    // Draw last move info above score
+    // Display the appropriate last move based on human player color
+    if(model.humanPlayer == PLAYER_WHITE) {
+        drawLastMove({INFO_CENTERED_X, INFO_BLACK_LASTMOVE_Y}, model.lastHumanMove);
+    } else {
+        drawLastMove({INFO_CENTERED_X, INFO_BLACK_LASTMOVE_Y}, model.lastAIMove);
+    }
+
     if (model.gameOver)
     {
         drawButton({INFO_PLAYBLACK_BUTTON_X,

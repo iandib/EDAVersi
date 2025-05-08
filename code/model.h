@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
 
 #define BOARD_SIZE 8
 
@@ -49,6 +50,10 @@ struct GameModel
     Piece board[BOARD_SIZE][BOARD_SIZE];
 
     Player humanPlayer;
+    
+    // Added to store the last moves
+    std::string lastHumanMove;
+    std::string lastAIMove;
 };
 
 typedef std::vector<Square> Moves;
@@ -135,5 +140,13 @@ void getValidMoves(GameModel &model, Moves &validMoves);
  * @return Move accepted.
  */
 bool playMove(GameModel &model, Square move);
+
+/**
+ * @brief Convierte coordenadas de tablero a notación de ajedrez
+ * 
+ * @param square Coordenadas del tablero
+ * @return Cadena en formato "A1", "H8", etc.
+ */
+std::string squareToChessNotation(Square square);
 
 #endif

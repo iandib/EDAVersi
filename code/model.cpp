@@ -20,6 +20,8 @@ void initModel(GameModel &model)
     model.playerTime[1] = 0;
 
     memset(model.board, PIECE_EMPTY, sizeof(model.board));
+    
+    // No inicializamos lastMove para que no aparezca el string hasta que no se juegue una ficha
 }
 
 void startModel(GameModel &model)

@@ -10,6 +10,9 @@
 
 #include "model.h"
 
+// Para la definición de drawLastMove()
+#include "raylib.h"
+
 /**
  * @brief Initializes a game view.
  */
@@ -47,5 +50,13 @@ bool isMousePointerOverPlayBlackButton();
  * @return true or false.
  */
 bool isMousePointerOverPlayWhiteButton();
+
+/**
+ * @brief Draws the last move information on the screen.
+ *
+ * @param position The position to draw the text.
+ * @param moveText The text of the last move.
+ */
+void drawLastMove(Vector2 position, const std::string &moveText);
 
 #endif
