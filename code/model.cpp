@@ -13,9 +13,10 @@
 
 //* NECESSARY LIBRARIES & HEADERS
 
-#include "raylib.h"
-#include "model.h"
 #include <string.h> // For memset function
+#include "raylib.h"
+
+#include "model.h"
 
 
 /* *****************************************************************
