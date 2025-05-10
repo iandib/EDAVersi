@@ -5,6 +5,9 @@
 /// @brief Implements the Reversi game AI using minimax algorithm
 /// @author Marc S. Ressl, Ian A. Dib, Luciano S. Cordero
 /// @copyright Copyright (c) 2023-2024
+/// @cite https://ceur-ws.org/Vol-1107/paper2.pdf
+/// @cite https://medium.com/@jackychoi26/how-to-write-an-othello-ai-with-alpha-beta-search-58131ffe67eb
+/// @cite https://samharrison00.medium.com/building-an-ai-to-play-my-favourite-board-game-othello-57f5aab1d6cf
 
 
 /* *****************************************************************
@@ -21,14 +24,15 @@
 #include "controller.h"
 
 
-//* CONSTANTS
+//* MINIMAX CONFIGURATION
 
-// Minimax algorithm configuration
-const int MAX_DEPTH = 5;          // Maximum depth for pruning
-const int MAX_NODES = 10000;      // Maximum number of nodes to evaluate
+const int MAX_DEPTH = 12;         // Maximum depth for pruning
+const int MAX_NODES = 100000;     // Maximum number of nodes to evaluate
 int nodesEvaluated = 0;           // Counter for evaluated nodes
 
-// Evaluation function parameters
+
+//* EVALUATION PARAMETERS
+
 const int CORNER_VALUE = 25;      // Value of a corner square
 const int EDGE_VALUE = 5;         // Value of an edge square
 const int MOBILITY_WEIGHT = 2;    // Weight for mobility (number of possible moves)
@@ -172,12 +176,17 @@ int evaluateBoard(GameModel& model, int depth)
     // If game is over, return a high or low value
     if (model.gameOver)
     {
+        // Victory: high value (favores quick wins)
         if (currentPlayerScore > opponentScore)
-            return 10000 - depth; // Victory: high value, favoring quick wins
+            return 10000 - depth;
+        
+        // Defeat: low value (favores slow losses)
         else if (currentPlayerScore < opponentScore)
-            return -10000 + depth; // Defeat: low value, favoring slow losses
+            return -10000 + depth;
+
+        // Draw
         else
-            return 0; // Draw
+            return 0; 
     }
     
     // Evaluate mobility (number of possible moves)
@@ -211,14 +220,17 @@ int evaluateBoard(GameModel& model, int depth)
                 if ((piece == PIECE_WHITE && currentPlayer == PLAYER_WHITE) ||
                     (piece == PIECE_BLACK && currentPlayer == PLAYER_BLACK))
                     cornerValue += CORNER_VALUE;
+
                 else
                     cornerValue -= CORNER_VALUE;
             }
+
             else if (isEdge(x, y))
             {
                 if ((piece == PIECE_WHITE && currentPlayer == PLAYER_WHITE) ||
                     (piece == PIECE_BLACK && currentPlayer == PLAYER_BLACK))
                     edgeValue += EDGE_VALUE;
+
                 else
                     edgeValue -= EDGE_VALUE;
             }
@@ -238,8 +250,8 @@ int evaluateBoard(GameModel& model, int depth)
 /// @brief Minimax algorithm with depth pruning and node limitation
 /// @param model Game model
 /// @param depth Current depth
-/// @param alpha Alpha value for alpha-beta pruning (bonus)
-/// @param beta Beta value for alpha-beta pruning (bonus)
+/// @param alpha Best score the maximizing player (AI) can guarantee so far
+/// @param beta Best score the minimizing player (opponent) can guarantee so far
 /// @param maximizingPlayer Whether current player is maximizing
 /// @return Value of the best move
 int minimax(GameModel& model, int depth, int alpha, int beta, bool maximizingPlayer)
