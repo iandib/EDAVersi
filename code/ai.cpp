@@ -51,49 +51,48 @@ const int PIECE_VALUE = 1;        // Value of a regular piece
 /// @param dx X direction (-1, 0, 1)
 /// @param dy Y direction (-1, 0, 1)
 /// @return Number of pieces that would be flipped in this direction
-unsigned int FlippedPiecesInDirection(GameModel& model, Square move, int dx, int dy)
+unsigned int countFlipped(GameModel& model, Square move, int dx, int dy)
 {
     int flipped = 0;
 
-    Piece PlayerPiece = (getCurrentPlayer(model) == PLAYER_WHITE) ? PIECE_WHITE : PIECE_BLACK;
-    Piece AiPiece = (getCurrentPlayer(model) == PLAYER_WHITE) ? PIECE_BLACK : PIECE_WHITE;
+    Piece playerPiece = (getCurrentPlayer(model) == PLAYER_WHITE) ? PIECE_WHITE : PIECE_BLACK;
+    Piece aiPiece = (getCurrentPlayer(model) == PLAYER_WHITE) ? PIECE_BLACK : PIECE_WHITE;
 
     int x = move.x + dx;
     int y = move.y + dy;
     Square checkSquare = { x, y };
 
     // The first square in this direction must contain an opponent piece
-    if (!isSquareValid(checkSquare) || getBoardPiece(model, checkSquare) != AiPiece)
+    if (!isSquareValid(checkSquare) || getBoardPiece(model, checkSquare) != aiPiece)
         return 0;
 
     flipped++;
 
-    // Continue moving in this direction
     x += dx;
     y += dy;
     checkSquare = { x, y };
 
-    // Continue until an invalid or empty square is found
+    // Move and keep count until an invalid or empty square is found
     while (isSquareValid(checkSquare))
     {
         Piece piece = getBoardPiece(model, checkSquare);
 
+        // Empty square, no pieces flipped
         if (piece == PIECE_EMPTY)
-            return 0; // Empty square, no pieces flipped
+            return 0;
 
-        if (piece == PlayerPiece)
-            return flipped; // Found own piece, return count of flipped pieces
+        // Found own piece, return count of flipped pieces
+        if (piece == playerPiece)
+            return flipped;
 
-        // Another opponent piece, increment counter
         flipped++;
 
-        // Move to next square in this direction
         x += dx;
         y += dy;
         checkSquare = { x, y };
     }
 
-    // If we reached here, we went off the board without finding our own piece
+    // Went off the board without finding our own piece
     return 0;
 }
 
@@ -102,7 +101,7 @@ unsigned int FlippedPiecesInDirection(GameModel& model, Square move, int dx, int
 /// @param model The game model
 /// @param move The square where the piece would be placed
 /// @return Total number of pieces that would be flipped
-int countTotalFlippedPieces(GameModel& model, Square move)
+int countTotalFlipped(GameModel& model, Square move)
 {
     int totalFlipped = 0;
 
@@ -114,7 +113,7 @@ int countTotalFlippedPieces(GameModel& model, Square move)
             if (dx == 0 && dy == 0)
                 continue;
 
-            totalFlipped += FlippedPiecesInDirection(model, move, dx, dy);
+            totalFlipped += countFlipped(model, move, dx, dy);
         }
     }
 
@@ -256,7 +255,7 @@ int evaluateBoard(GameModel& model, int depth)
 /// @return Value of the best move
 int minimax(GameModel& model, int depth, int alpha, int beta, bool maximizingPlayer)
 {
-    // Termination conditions
+    // Termination conditions (leaf nodes evaluation)
     if (depth == 0 || model.gameOver || nodesEvaluated >= MAX_NODES)
     {
         return evaluateBoard(model, depth);
@@ -287,6 +286,7 @@ int minimax(GameModel& model, int depth, int alpha, int beta, bool maximizingPla
         return minimax(tempModel, depth - 1, alpha, beta, !maximizingPlayer);
     }
     
+    // Selects the maximum value returned by the children nodes (inner nodes evaluation)
     if (maximizingPlayer)
     {
         int maxEval = std::numeric_limits<int>::min();
@@ -310,6 +310,7 @@ int minimax(GameModel& model, int depth, int alpha, int beta, bool maximizingPla
         return maxEval;
     }
 
+    // Selects the minimum value returned by the children nodes (inner nodes evaluation)
     else
     {
         int minEval = std::numeric_limits<int>::max();
@@ -346,14 +347,19 @@ Square getBestMove(GameModel& model)
 {
     // Reset node counter
     nodesEvaluated = 0;
+
+    Player currentPlayer = getCurrentPlayer(model);
+    Player opponentPlayer = (currentPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
     
     Moves validMoves;
     getValidMoves(model, validMoves);
+
+    Moves blockingMoves; 
     
     if (validMoves.size() == 0)
         return GAME_INVALID_SQUARE;
     
-    // First priority: play in corners if possible
+    // Play in corners if possible
     for (const Square& move : validMoves)
     {
         if (isCorner(move.x, move.y))
@@ -361,8 +367,63 @@ Square getBestMove(GameModel& model)
             return move;
         }
     }
+
+    // Block opponent from playing in corners if possible
+    for (const Square& move : validMoves)
+    {
+        // Simulate this move
+        GameModel tempModel = model;
+        bool moveSuccess = playMove(tempModel, move);
+        
+        if (!moveSuccess)
+            continue;
+        
+        // Check if after this move the opponent can reach any corner
+        bool opponentCanReachCorner = false;
+        
+        // Ensure current player is the opponent after the move
+        if (getCurrentPlayer(tempModel) == opponentPlayer)
+        {
+            Moves opponentMoves;
+            getValidMoves(tempModel, opponentMoves);
+            
+            for (const Square& opponentMove : opponentMoves)
+            {
+                if (isCorner(opponentMove.x, opponentMove.y))
+                {
+                    opponentCanReachCorner = true;
+                    break;
+                }
+            }
+            
+            // If this move prevents opponent from reaching a corner
+            if (!opponentCanReachCorner)
+            {
+                blockingMoves.push_back(move);
+            }
+        }
+    }
     
-    // Use minimax algorithm to evaluate the best move
+    // If corner-blocking moves found, choose the one that flips the most pieces
+    if (!blockingMoves.empty())
+    {
+        Square bestBlockingMove = blockingMoves[0];
+        int maxFlipped = countTotalFlipped(model, bestBlockingMove);
+        
+        for (size_t i = 1; i < blockingMoves.size(); i++)
+        {
+            int flipped = countTotalFlipped(model, blockingMoves[i]);
+            if (flipped > maxFlipped)
+            {
+                maxFlipped = flipped;
+                bestBlockingMove = blockingMoves[i];
+            }
+        }
+        
+        return bestBlockingMove;
+    }
+    
+    // Use minimax algorithm to evaluate the best move (root nodes evaluation)
     Square bestMove = validMoves[0];
     int bestValue = std::numeric_limits<int>::min();
     
@@ -380,72 +441,6 @@ Square getBestMove(GameModel& model)
         {
             bestValue = moveValue;
             bestMove = move;
-        }
-    }
-    
-    // If best move by minimax is not a corner, consider other priorities
-    if (!isCorner(bestMove.x, bestMove.y))
-    {
-        // Second priority: block opponent from playing in corners
-        GameModel simulatedModel = model;
-        Player currentPlayer = getCurrentPlayer(model);
-        Player opponentPlayer = (currentPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
-        
-        // List to store moves that block access to corners
-        Moves blockingMoves;
-        
-        for (const Square& move : validMoves)
-        {
-            // Simulate this move
-            GameModel tempModel = simulatedModel;
-            bool moveSuccess = playMove(tempModel, move);
-            
-            if (!moveSuccess)
-                continue;
-            
-            // Check if after this move the opponent can reach any corner
-            bool opponentCanReachCorner = false;
-            
-            // Ensure current player is the opponent after the move
-            if (getCurrentPlayer(tempModel) == opponentPlayer)
-            {
-                Moves opponentMoves;
-                getValidMoves(tempModel, opponentMoves);
-                
-                for (const Square& opponentMove : opponentMoves)
-                {
-                    if (isCorner(opponentMove.x, opponentMove.y))
-                    {
-                        opponentCanReachCorner = true;
-                        break;
-                    }
-                }
-                
-                // If this move prevents opponent from reaching a corner
-                if (!opponentCanReachCorner)
-                {
-                    blockingMoves.push_back(move);
-                }
-            }
-        }
-        
-        // If corner-blocking moves found, choose the one that flips the most pieces
-        if (!blockingMoves.empty())
-        {
-            Square bestBlockingMove = blockingMoves[0];
-            int maxFlipped = countTotalFlippedPieces(model, bestBlockingMove);
-            
-            for (size_t i = 1; i < blockingMoves.size(); i++)
-            {
-                int flipped = countTotalFlippedPieces(model, blockingMoves[i]);
-                if (flipped > maxFlipped)
-                {
-                    maxFlipped = flipped;
-                    bestBlockingMove = blockingMoves[i];
-                }
-            }
-            
-            return bestBlockingMove;
         }
     }
     
