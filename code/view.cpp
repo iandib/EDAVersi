@@ -108,9 +108,7 @@ void freeView()
 /// @param position The center position for the text
 /// @param fontSize The font size
 /// @param s The string to display
-static void drawCenteredText(Vector2 position,
-                             int fontSize,
-                             std::string s)
+static void drawCenteredText(Vector2 position, int fontSize, std::string s)
 {
     DrawText(s.c_str(),
              (int)position.x - MeasureText(s.c_str(), fontSize) / 2,
@@ -124,9 +122,7 @@ static void drawCenteredText(Vector2 position,
 /// @param label The label for the score
 /// @param position The center position for the score
 /// @param score The score value
-static void drawScore(std::string label,
-                      Vector2 position,
-                      int score)
+static void drawScore(std::string label, Vector2 position, int score)
 {
     std::string s = label + std::to_string(score);
 
@@ -158,6 +154,7 @@ static void drawTimer(Vector2 position,
     drawCenteredText(position, SUBTITLE_FONT_SIZE, s);
 }
 
+
 /// @brief Draws the last move information on the screen
 /// @param position The position to draw the text
 /// @param moveText The text of the last move
@@ -177,20 +174,13 @@ void drawLastMove(Vector2 position, const std::string &moveText)
 /// @param position The center position of the button
 /// @param label The text of the button
 /// @param backgroundColor The background color of the button
-static void drawButton(Vector2 position,
-                       std::string label,
-                       Color backgroundColor)
+static void drawButton(Vector2 position, std::string label, Color backgroundColor)
 {
     DrawRectangle(position.x - INFO_BUTTON_WIDTH / 2,
                   position.y - INFO_BUTTON_HEIGHT / 2,
-                  INFO_BUTTON_WIDTH,
-                  INFO_BUTTON_HEIGHT,
-                  backgroundColor);
+                  INFO_BUTTON_WIDTH, INFO_BUTTON_HEIGHT, backgroundColor);
 
-    drawCenteredText({position.x,
-                      position.y},
-                     SUBTITLE_FONT_SIZE,
-                     label.c_str());
+    drawCenteredText({position.x, position.y}, SUBTITLE_FONT_SIZE, label.c_str());
 }
 
 
@@ -219,14 +209,10 @@ void drawView(GameModel &model)
     ClearBackground(BEIGE);
 
     // Draw outer border
-    DrawRectangle(
-        OUTERBORDER_X,
-        OUTERBORDER_Y,
-        OUTERBORDER_SIZE,
-        OUTERBORDER_SIZE,
-        BLACK);
+    DrawRectangle(OUTERBORDER_X, OUTERBORDER_Y, OUTERBORDER_SIZE,
+                  OUTERBORDER_SIZE, BLACK);
 
-    // Get valid moves for current player (to show hints)
+    // Get valid moves for current player
     Moves validMoves;
     if (!model.gameOver && model.currentPlayer == model.humanPlayer) 
     {
@@ -240,19 +226,14 @@ void drawView(GameModel &model)
         {
             Square square = {x, y};
 
-            Vector2 position = {
-                BOARD_X + (float)square.x * SQUARE_SIZE,
-                BOARD_Y + (float)square.y * SQUARE_SIZE};
+            Vector2 position = {BOARD_X + (float)square.x * SQUARE_SIZE,
+                                BOARD_Y + (float)square.y * SQUARE_SIZE};
 
             // Draw square background
-            DrawRectangleRounded(
-                {position.x + SQUARE_CONTENT_OFFSET,
-                 position.y + SQUARE_CONTENT_OFFSET,
-                 SQUARE_CONTENT_SIZE,
-                 SQUARE_CONTENT_SIZE},
-                0.2F,
-                6,
-                DARKGREEN);
+            DrawRectangleRounded({position.x + SQUARE_CONTENT_OFFSET,
+                                  position.y + SQUARE_CONTENT_OFFSET,
+                                  SQUARE_CONTENT_SIZE, SQUARE_CONTENT_SIZE},
+                                  0.2F, 6, DARKGREEN);
 
             // Draw piece if present
             Piece piece = getBoardPiece(model, square);
@@ -261,22 +242,19 @@ void drawView(GameModel &model)
             {
                 DrawCircle((int)position.x + PIECE_CENTER,
                            (int)position.y + PIECE_CENTER,
-                           PIECE_RADIUS,
-                           (piece == PIECE_WHITE) ? WHITE : BLACK);
+                           PIECE_RADIUS, (piece == PIECE_WHITE) ? WHITE : BLACK);
             }
             
-            // Draw valid move indicator if this is a valid move
+            // Draw a gray circle to indicate valid move
             if (!model.gameOver && model.currentPlayer == model.humanPlayer) 
             {
                 for (auto move : validMoves) 
                 {
                     if (move.x == x && move.y == y) 
                     {
-                        // Draw a smaller gray circle to indicate valid move
                         DrawCircle((int)position.x + PIECE_CENTER,
                                   (int)position.y + PIECE_CENTER,
-                                  VALID_MOVE_RADIUS,
-                                  GRAY);
+                                  VALID_MOVE_RADIUS, GRAY);
                         break;
                     }
                 }
@@ -284,53 +262,44 @@ void drawView(GameModel &model)
         }
     }
 
+    // Draw game title
+    drawCenteredText({INFO_CENTERED_X, INFO_TITLE_Y}, TITLE_FONT_SIZE, GAME_NAME);
+
     // Draw Black player info
-    drawScore("Black score: ",
-              {INFO_CENTERED_X,
-               INFO_WHITE_SCORE_Y},
+    drawScore("Black score: ", {INFO_CENTERED_X, INFO_WHITE_SCORE_Y},
               getScore(model, PLAYER_BLACK));
-              
-    drawTimer({INFO_CENTERED_X,
-               INFO_WHITE_TIME_Y},
+
+    drawTimer({INFO_CENTERED_X, INFO_WHITE_TIME_Y},
               getTimer(model, PLAYER_BLACK));
     
+    // Draw White player info
+    drawScore("White score: ", {INFO_CENTERED_X, INFO_BLACK_SCORE_Y},
+              getScore(model, PLAYER_WHITE));
+
+    drawTimer({INFO_CENTERED_X, INFO_BLACK_TIME_Y},
+              getTimer(model, PLAYER_WHITE));
+
     // Draw last move info above score based on human player color
     if((model.humanPlayer == PLAYER_BLACK) && !model.gameOver)
     {
         drawLastMove({INFO_CENTERED_X, INFO_WHITE_LASTMOVE_Y}, model.lastHumanMove);
         drawLastMove({INFO_CENTERED_X, INFO_BLACK_LASTMOVE_Y}, model.lastAIMove);
     }
+
     else if((model.humanPlayer == PLAYER_WHITE) && !model.gameOver)
     {
         drawLastMove({INFO_CENTERED_X, INFO_BLACK_LASTMOVE_Y}, model.lastHumanMove);
         drawLastMove({INFO_CENTERED_X, INFO_WHITE_LASTMOVE_Y}, model.lastAIMove);
     }
-
-    // Draw game title
-    drawCenteredText({INFO_CENTERED_X, INFO_TITLE_Y}, TITLE_FONT_SIZE, GAME_NAME);
-    
-    // Draw White player info
-    drawScore("White score: ",
-              {INFO_CENTERED_X,
-               INFO_BLACK_SCORE_Y},
-              getScore(model, PLAYER_WHITE));
-
-    drawTimer({INFO_CENTERED_X,
-               INFO_BLACK_TIME_Y},
-              getTimer(model, PLAYER_WHITE));
     
     // Draw game control buttons if game is over
     if (model.gameOver)
     {
-        drawButton({INFO_PLAYBLACK_BUTTON_X,
-                    INFO_PLAYBLACK_BUTTON_Y},
-                   "Play black",
-                   BLACK);
+        drawButton({INFO_PLAYBLACK_BUTTON_X, INFO_PLAYBLACK_BUTTON_Y},
+                   "Play black", BLACK);
 
-        drawButton({INFO_PLAYWHITE_BUTTON_X,
-                    INFO_PLAYWHITE_BUTTON_Y},
-                   "Play white",
-                   WHITE);
+        drawButton({INFO_PLAYWHITE_BUTTON_X, INFO_PLAYWHITE_BUTTON_Y},
+                   "Play white", WHITE);
     }
 
     EndDrawing();

@@ -48,8 +48,8 @@ const int PIECE_VALUE = 1;        // Value of a regular piece
 /// @brief Counts how many pieces can be flipped in each direction with a move
 /// @param model The game model
 /// @param move The square where the piece would be placed
-/// @param dx X direction (-1, 0, 1)
-/// @param dy Y direction (-1, 0, 1)
+/// @param dx X-direction delta (-1, 0, 1)
+/// @param dy Y-direction delta (-1, 0, 1)
 /// @return Number of pieces that would be flipped in this direction
 unsigned int countFlipped(GameModel& model, Square move, int dx, int dy)
 {
@@ -68,11 +68,12 @@ unsigned int countFlipped(GameModel& model, Square move, int dx, int dy)
 
     flipped++;
 
+    // Start moving in specified direction
     x += dx;
     y += dy;
     checkSquare = { x, y };
 
-    // Move and keep count until an invalid or empty square is found
+    // Continue until an invalid or empty square is found
     while (isSquareValid(checkSquare))
     {
         Piece piece = getBoardPiece(model, checkSquare);
@@ -85,8 +86,10 @@ unsigned int countFlipped(GameModel& model, Square move, int dx, int dy)
         if (piece == playerPiece)
             return flipped;
 
+        // Found another opponent piece
         flipped++;
 
+        // Continue moving in specified direction
         x += dx;
         y += dy;
         checkSquare = { x, y };

@@ -21,9 +21,9 @@
 
 //* PUBLIC FUNCTION PROTOTYPES
 
-/// @brief Updates the game view
-/// @param model The game model
-/// @return Should the view be closed?
+/// @brief Updates the game view based on user interactions and game state
+/// @param model The game model to update
+/// @return false if window should close, true otherwise
 bool updateView(GameModel &model);
 
 

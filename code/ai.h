@@ -21,9 +21,9 @@
 
 //* PUBLIC FUNCTION PROTOTYPES
 
-/// @brief Returns the best move for a certain position
-/// @param model The game model
-/// @return The best move
+/// @brief Gets the best move for the current player using minimax algorithm
+/// @param model Game model
+/// @return The best square to play
 Square getBestMove(GameModel &model);
 
 

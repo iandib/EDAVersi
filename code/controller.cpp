@@ -78,7 +78,6 @@ bool updateView(GameModel &model)
     {
         if (IsMouseButtonPressed(0))
         {
-            // Human player
             Square square = getSquareOnMousePointer();
 
             if (isSquareValid(square))
@@ -86,13 +85,11 @@ bool updateView(GameModel &model)
                 Moves validMoves;
                 getValidMoves(model, validMoves);
 
-                // Play move if valid
                 for (auto move : validMoves)
                 {
                     if ((square.x == move.x) && (square.y == move.y) && 
                         playMove(model, square))
                     {
-                        // Store the move in the model
                         model.lastHumanMove = squareToChessNotation(square);
                     }
                 }
@@ -100,14 +97,12 @@ bool updateView(GameModel &model)
         }
     }
 
-    else
+    else // AI turn
     {
-        // AI player
         Square square = getBestMove(model);
 
         if (playMove(model, square))
         {
-            // Store the move in the model
             model.lastAIMove = squareToChessNotation(square);
         }
     }

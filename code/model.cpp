@@ -69,7 +69,7 @@ void startModel(GameModel &model)
 
 /// @brief Gets the current player
 /// @param model The game model
-/// @return The current player
+/// @return PLAYER_WHITE or PLAYER_BLACK
 Player getCurrentPlayer(GameModel &model)
 {
     return model.currentPlayer;
@@ -78,7 +78,7 @@ Player getCurrentPlayer(GameModel &model)
 
 /// @brief Gets the score for a player
 /// @param model The game model
-/// @param player The player to get the score for
+/// @param player The player (PLAYER_WHITE or PLAYER_BLACK)
 /// @return The score
 int getScore(GameModel &model, Player player)
 {
@@ -100,7 +100,7 @@ int getScore(GameModel &model, Player player)
 
 /// @brief Gets the timer for a player
 /// @param model The game model
-/// @param player The player to get the time for
+/// @param player The player (PLAYER_WHITE or PLAYER_BLACK)
 /// @return The elapsed time in seconds
 double getTimer(GameModel &model, Player player)
 {
@@ -135,9 +135,9 @@ void setBoardPiece(GameModel &model, Square square, Piece piece)
 }
 
 
-/// @brief Checks if a square is within the board boundaries
-/// @param square The square to check
-/// @return True if the square is valid
+/// @brief Checks whether a square is within the board
+/// @param square The square
+/// @return True if valid, false otherwise
 bool isSquareValid(Square square)
 {
     return (square.x >= 0) &&
@@ -169,48 +169,48 @@ bool checkDirection(GameModel &model, Square move, int dx, int dy, std::vector<S
     // Temporary vector to store potential flips
     std::vector<Square> tempFlipped;
     
-    // Start checking in the specified direction
     int x = move.x + dx;
     int y = move.y + dy;
     Square checkSquare = {x, y};
     
-    // First square in this direction must be opponent's piece
+    // The first square in this direction must contain an opponent piece
     if (!isSquareValid(checkSquare) || getBoardPiece(model, checkSquare) != opponentPiece)
         return false;
         
     // Store this square as potentially flipped
     tempFlipped.push_back(checkSquare);
     
-    // Keep moving in the direction
+    // Start moving in specified direction
     x += dx;
     y += dy;
     checkSquare = {x, y};
     
-    // Continue until we find an invalid square or an empty square
+    // Continue until an invalid or empty square is found
     while (isSquareValid(checkSquare))
     {
         Piece piece = getBoardPiece(model, checkSquare);
         
+        // Empty square, so no flips
         if (piece == PIECE_EMPTY)
-            return false; // Empty square, so no flips
+            return false; 
             
-        if (piece == currentPlayerPiece)
+        // Found our own piece, all pieces in between can be flipped
+            if (piece == currentPlayerPiece)
         {
-            // Found our own piece, so all pieces in between can be flipped
             flippedPieces.insert(flippedPieces.end(), tempFlipped.begin(), tempFlipped.end());
             return true;
         }
         
-        // Another opponent piece, add to potential flips
+        // Found another opponent piece, add to potential flips
         tempFlipped.push_back(checkSquare);
         
-        // Move to next square in this direction
+        // Continue moving in this direction
         x += dx;
         y += dy;
         checkSquare = {x, y};
     }
     
-    // If we reached here, we went off the board without finding our own piece
+    // Went off the board without finding our own piece
     return false;
 }
 
@@ -269,7 +269,7 @@ void getValidMoves(GameModel &model, Moves &validMoves)
 /// @brief Plays a move at the specified position
 /// @param model The game model
 /// @param move The position to play at
-/// @return True if the move was valid and executed
+/// @return True if the move was valid and executed, false otherwise
 bool playMove(GameModel &model, Square move)
 {
     // Set game piece
@@ -339,6 +339,7 @@ bool playMove(GameModel &model, Square move)
             // Neither player can make a move, game is over
             model.gameOver = true;
         }
+
         else
         {
             // Current player has no moves but opponent does, so skip turn

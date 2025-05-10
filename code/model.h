@@ -80,41 +80,41 @@ typedef std::vector<Square> Moves;
 
 //* PUBLIC FUNCTION PROTOTYPES
 
-/// @brief Initializes a game model
-/// @param model The game model
+/// @brief Initializes the game model
+/// @param model The game model to initialize
 void initModel(GameModel &model);
 
-/// @brief Starts a game
-/// @param model The game model
+/// @brief Starts a new game
+/// @param model The game model to start
 void startModel(GameModel &model);
 
-/// @brief Returns the model's current player
+/// @brief Gets the current player
 /// @param model The game model
 /// @return PLAYER_WHITE or PLAYER_BLACK
 Player getCurrentPlayer(GameModel &model);
 
-/// @brief Returns the model's current score
+/// @brief Gets the score for a player
 /// @param model The game model
 /// @param player The player (PLAYER_WHITE or PLAYER_BLACK)
 /// @return The score
 int getScore(GameModel &model, Player player);
 
-/// @brief Returns the game timer for a player
+/// @brief Gets the timer for a player
 /// @param model The game model
 /// @param player The player (PLAYER_WHITE or PLAYER_BLACK)
-/// @return The time in seconds
+/// @return The elapsed time in seconds
 double getTimer(GameModel &model, Player player);
 
-/// @brief Return a model's piece
+/// @brief Gets the piece at a specific board position
 /// @param model The game model
-/// @param square The square
-/// @return The piece at the square
+/// @param square The board coordinates
+/// @return The piece at that position
 Piece getBoardPiece(GameModel &model, Square square);
 
-/// @brief Sets a model's piece
+/// @brief Sets a piece at a specific board position
 /// @param model The game model
-/// @param square The square
-/// @param piece The piece to be set
+/// @param square The board coordinates
+/// @param piece The piece to set
 void setBoardPiece(GameModel &model, Square square, Piece piece);
 
 /// @brief Checks whether a square is within the board
@@ -122,21 +122,16 @@ void setBoardPiece(GameModel &model, Square square, Piece piece);
 /// @return True if valid, false otherwise
 bool isSquareValid(Square square);
 
-/// @brief Returns a list of valid moves for the current player
+/// @brief Gets all valid moves for the current player
 /// @param model The game model
-/// @param validMoves A list that receives the valid moves
+/// @param validMoves Vector to store the valid moves
 void getValidMoves(GameModel &model, Moves &validMoves);
 
-/// @brief Plays a move
+/// @brief Plays a move at the specified position
 /// @param model The game model
-/// @param move The move to play
-/// @return True if move was accepted, false otherwise
+/// @param move The position to play at
+/// @return True if the move was valid and executedm false otherwise
 bool playMove(GameModel &model, Square move);
-
-/// @brief Converts board coordinates to chess notation
-/// @param square Board coordinates
-/// @return String in "A1", "H8", etc. format
-std::string squareToChessNotation(Square square);
 
 
 #endif // MODEL_H
