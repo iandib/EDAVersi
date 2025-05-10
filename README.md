@@ -9,7 +9,7 @@ Como adicional, modificó la estructura GameModel en model.h agregando los campo
 
 * Luciano Cordero:
 Diseñó en model.cpp la función auxiliar checkDirection() para registrar las fichas potencialmente volteables. En ai.cpp agregó las funciones countFlipped() y countTotalFlipped() que calculan cuántas fichas se voltearían con un movimiento dado, isCorner() e isEdge() que identifican posiciones estratégicas en el tablero y evaluateBoard() que asigna un valor al estado actual del tablero.
-A partir de estas nuevas funciones, planteó una primera versión de getBestMove() que establecía las prioridades 1. ocupar las esquinas, 2. bloquear que el jugador ocupe las esquinas y 3. seleccionar el movimiento inmediato que voltee la mayor cantidad de fichas (prioridad que luego fue reemplazada por el algoritmo minimax). Buscó identificar los parámetros para la poda alfa-beta.
+A partir de estas nuevas funciones, planteó una primera versión de getBestMove() que establecía las prioridades 1. ocupar las esquinas, 2. bloquear que el jugador ocupe las esquinas (prioridad que luego se descartó) y 3. seleccionar el movimiento inmediato que voltee la mayor cantidad de fichas (prioridad que luego fue reemplazada por el algoritmo minimax). Buscó identificar los parámetros para la poda alfa-beta.
 
 ## Parte 1: Generación de movimientos válidos y algoritmo de jugada
 

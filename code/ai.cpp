@@ -350,14 +350,9 @@ Square getBestMove(GameModel& model)
 {
     // Reset node counter
     nodesEvaluated = 0;
-
-    Player currentPlayer = getCurrentPlayer(model);
-    Player opponentPlayer = (currentPlayer == PLAYER_WHITE) ? PLAYER_BLACK : PLAYER_WHITE;
     
     Moves validMoves;
     getValidMoves(model, validMoves);
-
-    Moves blockingMoves; 
     
     if (validMoves.size() == 0)
         return GAME_INVALID_SQUARE;
@@ -369,61 +364,6 @@ Square getBestMove(GameModel& model)
         {
             return move;
         }
-    }
-
-    // Block opponent from playing in corners if possible
-    for (const Square& move : validMoves)
-    {
-        // Simulate this move
-        GameModel tempModel = model;
-        bool moveSuccess = playMove(tempModel, move);
-        
-        if (!moveSuccess)
-            continue;
-        
-        // Check if after this move the opponent can reach any corner
-        bool opponentCanReachCorner = false;
-        
-        // Ensure current player is the opponent after the move
-        if (getCurrentPlayer(tempModel) == opponentPlayer)
-        {
-            Moves opponentMoves;
-            getValidMoves(tempModel, opponentMoves);
-            
-            for (const Square& opponentMove : opponentMoves)
-            {
-                if (isCorner(opponentMove.x, opponentMove.y))
-                {
-                    opponentCanReachCorner = true;
-                    break;
-                }
-            }
-            
-            // If this move prevents opponent from reaching a corner
-            if (!opponentCanReachCorner)
-            {
-                blockingMoves.push_back(move);
-            }
-        }
-    }
-    
-    // If corner-blocking moves found, choose the one that flips the most pieces
-    if (!blockingMoves.empty())
-    {
-        Square bestBlockingMove = blockingMoves[0];
-        int maxFlipped = countTotalFlipped(model, bestBlockingMove);
-        
-        for (size_t i = 1; i < blockingMoves.size(); i++)
-        {
-            int flipped = countTotalFlipped(model, blockingMoves[i]);
-            if (flipped > maxFlipped)
-            {
-                maxFlipped = flipped;
-                bestBlockingMove = blockingMoves[i];
-            }
-        }
-        
-        return bestBlockingMove;
     }
     
     // Use minimax algorithm to evaluate the best move (root nodes evaluation)
